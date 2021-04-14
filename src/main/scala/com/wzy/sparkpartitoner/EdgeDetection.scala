@@ -2,7 +2,6 @@ package com.wzy.sparkpartitoner
 
 import java.awt.Color
 import java.awt.image.WritableRaster
-import java.io.IOException
 
 import com.wzy.utils.Convolution
 
