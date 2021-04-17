@@ -1,7 +1,8 @@
-package com.wzy.sparkpartitoner
+package com.wzy.edgedetection
 
 import java.awt.Color
 import java.awt.image.WritableRaster
+import java.awt.image.BufferedImage
 
 import com.wzy.utils.Convolution
 
@@ -9,8 +10,6 @@ import com.wzy.utils.Convolution
  * 使用卷积进行边缘检测
  */
 object EdgeDetection {
-
-  import java.awt.image.BufferedImage
 
   /**
    * 需要读取彩色的RGB图像，并从中构建三维矩阵
@@ -59,12 +58,13 @@ object EdgeDetection {
 
   /**
    * 将卷积后的图像矩阵转为Byte数组
+   *
    * @param bufferedImage 原图像矩阵
-   * @param imageRGB 卷积后的图像矩阵
+   * @param imageRGB      卷积后的图像矩阵
    * @return byte数组形式表示的图像数据
    */
   def createBufferImageFromConvolutionMatrix(bufferedImage: BufferedImage, imageRGB: Array[Array[Double]]): BufferedImage = {
-    val writeBackBufferImage = new BufferedImage(bufferedImage.getWidth,bufferedImage.getHeight, BufferedImage.TYPE_INT_RGB)
+    val writeBackBufferImage = new BufferedImage(bufferedImage.getWidth, bufferedImage.getHeight, BufferedImage.TYPE_INT_RGB)
     val raster: WritableRaster = writeBackBufferImage.getData.asInstanceOf[WritableRaster]
     for (i <- imageRGB.indices) {
       for (j <- imageRGB(i).indices) {

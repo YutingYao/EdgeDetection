@@ -14,7 +14,8 @@
 .mtj.tmp/
 
 # data
-data/
+input/
+output/
 .idea/
 
 # Package Files #

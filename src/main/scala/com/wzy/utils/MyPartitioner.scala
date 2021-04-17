@@ -1,4 +1,4 @@
-package com.wzy.sparkpartitoner
+package com.wzy.utils
 
 import org.apache.spark.Partitioner
 
