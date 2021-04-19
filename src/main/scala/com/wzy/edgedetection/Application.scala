@@ -9,6 +9,7 @@ import javax.imageio.ImageIO
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
+import scalaj.http.Http
 
 /**
  * spark 主函数
@@ -18,8 +19,8 @@ object Application {
   def main(args: Array[String]): Unit = {
 
     // 建立和Spark框架的连接
-    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").setMaster("local[2]").set("hdfsBasePath","hdfs://namenode:8020")
-//    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").set("hdfsBasePath", "hdfs://namenode:8020")
+    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").setMaster("local[2]").set("hdfsBasePath", "hdfs://namenode:8020")
+    //    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").set("hdfsBasePath", "hdfs://namenode:8020")
 
     val sc: SparkContext = new SparkContext(sparkconf)
 
@@ -28,7 +29,7 @@ object Application {
       .getOrCreate()
 
     val hdfsBasePath: String = "."
-//    val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
+    //    val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
 
     val inputPath: String = hdfsBasePath + "/input/cat/"
 
@@ -43,15 +44,15 @@ object Application {
     val images: DataFrame = spark.read.format("image").option("dropInvalid", value = true).load(inputPath)
 
     //TODO 对数据分区
-    // 1. 获取各个节点的核数、内存使用情况
+    // 1. 获取各个节点的计算资源（CPU核心数量、内存大小数量）
     // 2. 对RDD使用Partition进行分区
     // 3. 调用 getPreferredLocations
     println(sc.applicationId)
+    val response = Http("http://10.101.241.5:4040/api/v1/applications/" + sc.applicationId + "/allexecutors").asString
 
     // val imagesRDD: RDD[Row] = images.rdd
     // imagesRDD.partitionBy(new MyPartitioner(4)).mapPartitions(x => x).saveAsTextFile(outputPath)
-    // 3. 调用 getPreferredLocations
-    println(sc.applicationId)
+
 
     // 执行卷积操作
     //TODO 以下步骤应该改为基于rdd格式运行
@@ -66,7 +67,6 @@ object Application {
         val nChannels: Int = row.getAs[Int]("nChannels")
         val data: Array[Byte] = row.getAs[Array[Byte]]("data")
         (origin, height, width, nChannels, mode,
-          //                    markWithText(origin, width, height, BufferedImage.TYPE_3BYTE_BGR, data, "WZY"))
           detection(origin, width, height, BufferedImage.TYPE_3BYTE_BGR, data, FILTER_SCHARR_V))
       })
 
