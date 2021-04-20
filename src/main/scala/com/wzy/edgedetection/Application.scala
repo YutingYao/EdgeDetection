@@ -18,7 +18,9 @@ object Application {
   def main(args: Array[String]): Unit = {
 
     // 建立和Spark框架的连接
-    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").setMaster("local[2]").set("hdfsBasePath", "hdfs://namenode:8020")
+    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").setMaster("local[2]")
+      .set("hdfsBasePath", "hdfs://namenode:8020")
+      .set("spark-master", "10.101.241.5")
     //  val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").set("hdfsBasePath", "hdfs://namenode:8020")
 
     val sc: SparkContext = new SparkContext(sparkconf)
@@ -48,34 +50,22 @@ object Application {
     // 3. 调用 getPreferredLocations
     println(sc.applicationId)
 
-    val taskMonitor = new WorkerMonitor()
-    taskMonitor.getAllworkers(sc.applicationId, "10.101.241.5")
+    //taskMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
+    WorkerMonitor.getAllworkers(sc.applicationId, "localhost")
 
 
     // val imagesRDD: RDD[Row] = images.rdd
     // imagesRDD.partitionBy(new MyPartitioner(4)).mapPartitions(x => x).saveAsTextFile(outputPath)
 
-    // 执行卷积操作
-    //TODO 以下步骤应该改为基于rdd格式运行
+    // 基于rdd格式进行卷积操作
     val FILTER_SCHARR_V: Array[Array[Double]] = Array(Array(3, 0, -3), Array(10, 0, -10), Array(3, 0, -3))
 
-
-    import spark.implicits._
-    //    val value: Dataset[(String, Int, Int, Int, Int, Array[Byte])] = images.select("image.origin", "image.width", "image.height", "image.nChannels", "image.mode", "image.data")
-    //      .map(row => {
-    //        val origin: String = row.getAs[String]("origin")
-    //        val width: Int = row.getAs[Int]("width")
-    //        val height: Int = row.getAs[Int]("height")
-    //        val mode: Int = row.getAs[Int]("mode")
-    //        val nChannels: Int = row.getAs[Int]("nChannels")
-    //        val data: Array[Byte] = row.getAs[Array[Byte]]("data")
-    //        (origin, height, width, nChannels, mode,
-    //          detection(origin, width, height, BufferedImage.TYPE_3BYTE_BGR, data, FILTER_SCHARR_V))
-    //      })
-
     val imagesrdd: RDD[Row] = images.select("image.origin", "image.width", "image.height", "image.nChannels", "image.mode", "image.data").rdd
+    val value2 = imagesrdd.repartition(10 * imagesrdd.getNumPartitions)
 
     //TODO 对rdd进行分区
+    // 图像数据使用tif格式
+    import spark.implicits._
     val value = imagesrdd.map(row => {
       val origin: String = row.getAs[String]("origin")
       val width: Int = row.getAs[Int]("width")
