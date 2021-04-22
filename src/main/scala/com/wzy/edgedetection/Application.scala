@@ -18,9 +18,14 @@ object Application {
   def main(args: Array[String]): Unit = {
 
     // 建立和Spark框架的连接
-    val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").setMaster("local[2]")
-      .set("hdfsBasePath", "hdfs://namenode:8020")
-      .set("spark-master", "10.101.241.5")
+    val sparkconf: SparkConf =
+      new SparkConf()
+        .setAppName("Spark Images EdgeDetection")
+        .setMaster("local[2]")
+        .set("hdfsBasePath", "hdfs://namenode:8020")
+        .set("spark-master", "10.101.241.5")
+
+
     //  val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").set("hdfsBasePath", "hdfs://namenode:8020")
 
     val sc: SparkContext = new SparkContext(sparkconf)
