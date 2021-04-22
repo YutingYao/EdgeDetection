@@ -1,15 +1,52 @@
-package com.wzy.edgedetection
+package com.wzy.sharpen
 
 import java.awt.Color
-import java.awt.image.WritableRaster
-import java.awt.image.BufferedImage
+import java.awt.image.{BufferedImage, WritableRaster}
+import java.io.ByteArrayOutputStream
 
-import com.wzy.utils.Convolution
+import javax.imageio.ImageIO
 
 /**
  * 使用卷积进行边缘检测
  */
 object EdgeDetection {
+
+  /**
+   * 对图像进行卷积处理
+   *
+   * @param originImageURL 原图像的url
+   * @param width          图像宽度
+   * @param height         图像高度
+   * @param imageType      图像格式
+   * @param data           byte数组形式的图像数据
+   * @param filter         滤波器
+   * @return byte数组形式的图像数据
+   */
+  def detection(originImageURL: String, width: Int, height: Int, imageType: Int, data: Array[Byte], filter: Array[Array[Double]]): Array[Byte] = {
+    val imageName: String = originImageURL.split("/").last
+
+    // 从byte数组 重新构建原图像
+    val buffImg = new BufferedImage(width, height, imageType)
+    val raster: WritableRaster = buffImg.getData.asInstanceOf[WritableRaster]
+    val pixels: Array[Int] = data.map(_.toInt)
+    raster.setPixels(0, 0, width, height, pixels)
+    buffImg.setData(raster)
+
+    // 获取RGB的三维矩阵
+    val imageArray: Array[Array[Array[Double]]] = EdgeDetection.transformImageToArray(buffImg)
+
+    // 对三维矩阵进行卷积
+    val finalConv: Array[Array[Double]] = EdgeDetection.applyConvolution(width, height, imageArray, filter)
+
+    // 获取卷积后的图像数据
+    val bufferedImage: BufferedImage = EdgeDetection.createBufferImageFromConvolutionMatrix(buffImg, finalConv)
+
+    // 数据导出
+    val buffer = new ByteArrayOutputStream
+    ImageIO.write(bufferedImage, "TIFF", buffer)
+
+    buffer.toByteArray
+  }
 
   /**
    * 需要读取彩色的RGB图像，并从中构建三维矩阵

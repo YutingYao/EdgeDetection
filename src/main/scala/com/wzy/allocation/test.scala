@@ -1,7 +1,8 @@
-package com.wzy.test
+package com.wzy.allocation
+
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * 测试设置rdd首选位置
@@ -19,6 +20,8 @@ object test {
     someData += ("1" -> Seq("spark-worker-1"))
     someData += ("2" -> Seq("spark-worker-2"))
     someData += ("3" -> Seq("spark-worker-3"))
+
+    someData.foreach(println)
 
     val someRdd = sc.makeRDD(someData)
 

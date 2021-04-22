@@ -1,4 +1,6 @@
-package com.wzy.edgedetection
+package com.wzy.evaluation
+
+import com.wzy.monitor.Worker
 
 /**
  * 计算能力评估模块
@@ -10,11 +12,12 @@ object EvaluationCenter {
   private var workers: Seq[Worker] = _
 
   /**
-   *  对节点计算性能进行评估
+   * 对节点计算性能进行评估
+   *
    * @param worker
    * @return
    */
-  def evaluateComputingPower(worker: Worker): Int ={
+  def evaluateComputingPower(worker: Worker): Int = {
     worker.totalCores
   }
 

@@ -1,7 +1,6 @@
-package com.wzy.edgedetection
+package com.wzy.monitor
 
 import scalaj.http.Http
-import ujson._
 import upickle.default.ReadWriter
 
 /**
