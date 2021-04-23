@@ -15,6 +15,7 @@ object test {
     //  val sparkconf: SparkConf = new SparkConf().setAppName("Spark Images EdgeDetection").set("hdfsBasePath", "hdfs://namenode:8020")
 
     val sc: SparkContext = new SparkContext(sparkconf)
+
     val someData = mutable.ArrayBuffer[(String, Seq[String])]()
 
     someData += ("1" -> Seq("spark-worker-1"))
