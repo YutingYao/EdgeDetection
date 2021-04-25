@@ -5,7 +5,7 @@ import upickle.default.ReadWriter
 
 /**
  * 节点性能监控模块
- * 采集作业执行相关的节点多项监控信息，为后续的自适应数据分区提供依据
+ * 采集作业执行相关的节点监控信息
  */
 
 case class Worker(var id: String, var hostPort: String, var totalCores: Int, var maxMemory: Double)
@@ -15,9 +15,10 @@ object WorkerMonitor {
   private var workers: Seq[Worker] = _
 
   /**
-   * 获取节点监控信息
    *
-   * @param applicationId 任务id
+   * @param applicationId 提交的任务ID
+   * @param master spark监控的入口
+   * @return
    */
   def getAllworkers(applicationId: String, master: String): Seq[Worker] = {
     val response = Http("http://" + master + ":4040/api/v1/applications/" + applicationId + "/allexecutors").asString

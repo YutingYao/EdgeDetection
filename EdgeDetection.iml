@@ -11,6 +11,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-sdk-2.11.12" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.11.12 (2)" level="application" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.11.12" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.12" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-reflect:2.11.12" level="project" />
@@ -23,12 +24,12 @@
     <orderEntry type="library" name="Maven: com.lihaoyi:upickle_2.11:1.3.11" level="project" />
     <orderEntry type="library" name="Maven: com.lihaoyi:upack_2.11:1.3.11" level="project" />
     <orderEntry type="library" name="Maven: com.lihaoyi:upickle-implicits_2.11:1.3.11" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.imageio:imageio-core:3.6.4" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.common:common-lang:3.6.4" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.common:common-io:3.6.4" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.common:common-image:3.6.4" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.imageio:imageio-tiff:3.6.4" level="project" />
-    <orderEntry type="library" name="Maven: com.twelvemonkeys.imageio:imageio-metadata:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.imageio:imageio-core:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.common:common-lang:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.common:common-io:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.common:common-image:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.imageio:imageio-tiff:3.6.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twelvemonkeys.imageio:imageio-metadata:3.6.4" level="project" />
     <orderEntry type="library" name="Maven: org.locationtech.geotrellis:geotrellis-spark_2.11:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.locationtech.geotrellis:geotrellis-util_2.11:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.locationtech.geotrellis:geotrellis-raster_2.11:2.1.0" level="project" />
