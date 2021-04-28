@@ -39,11 +39,9 @@ object AllocationCenter {
     val psum = new ListBuffer[Int]
     workers.foreach(x => {
       weightSum += x.totalCores
-      println(weightSum)
       psum += weightSum
     })
 
-    psum.foreach(println)
 
     var indexToPrefs: Map[Int, Seq[String]] = Map()
 
@@ -51,7 +49,6 @@ object AllocationCenter {
 
     for (i <- partitionsIndex) {
       val index = pickIndex(psum)
-      println(index)
       val workerName = workers(index).hostPort.split(":")(0)
       indexToPrefs += (i -> Seq(workerName))
     }

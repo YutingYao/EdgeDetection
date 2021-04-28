@@ -1,4 +1,4 @@
-package com.wzy.allocation
+package com.wzy
 
 import org.apache.spark.{SparkConf, SparkContext}
 

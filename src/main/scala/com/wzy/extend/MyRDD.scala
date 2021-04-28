@@ -1,4 +1,4 @@
-package com.wzy.extend.rdd
+package com.wzy.extend
 
 import scala.collection.Map
 import scala.reflect.ClassTag

@@ -6,15 +6,13 @@ import java.util.Date
 
 import com.wzy.monitor.WorkerMonitor
 import com.wzy.sharpen.EdgeDetection.detection
-import org.apache.spark.rdd.{ParallelCollectionRDD, RDD}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
-
-import scala.reflect.ClassTag
 /**
  * spark 主函数
  */
-object Application {
+object EdgeDetection {
 
   def main(args: Array[String]): Unit = {
 

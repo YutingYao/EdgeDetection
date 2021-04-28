@@ -1,4 +1,4 @@
-package com.wzy.allocation
+package com.wzy.extend
 
 import org.apache.spark.Partitioner
 
