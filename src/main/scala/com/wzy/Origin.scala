@@ -3,12 +3,11 @@ package com.wzy
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import com.wzy.allocation.AllocationCenter
 import com.wzy.monitor.{Worker, WorkerMonitor}
 import geotrellis.raster.Tile
 import geotrellis.raster.mapalgebra.focal.Square
 import geotrellis.raster.resample.Bilinear
-import geotrellis.spark._
+import geotrellis.spark.{SpatialKey, TileLayerMetadata, withTilerMethods}
 import geotrellis.spark.io.hadoop.HadoopSparkContextMethodsWrapper
 import geotrellis.spark.tiling.FloatingLayoutScheme
 import geotrellis.vector.ProjectedExtent
@@ -17,8 +16,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
 object Origin {
-    //val maskedPath = "input/Test3.tif"
-    //val resultPath = "output/"
+  //val maskedPath = "input/Test3.tif"
+  //val resultPath = "output/"
   def main(args: Array[String]): Unit = {
 
     val inputfile: String = args(0)

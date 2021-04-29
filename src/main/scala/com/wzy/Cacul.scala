@@ -64,6 +64,7 @@ object Cacul {
       sc.hadoopGeoTiffRDD(inputPath)
     }
 
+    import geotrellis.spark.Implicits._
     val (_, rasterMetaData) =
       TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
 
