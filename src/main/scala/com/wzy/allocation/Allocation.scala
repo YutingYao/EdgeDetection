@@ -15,8 +15,5 @@ object Allocation {
     for (i <- effs.indices){
       allcation.put(effs(i), mutable.Seq[Bucket]())
     }
-    //for(i <- bks.indices){
-    //  fit_i
-    //}
   }
 }

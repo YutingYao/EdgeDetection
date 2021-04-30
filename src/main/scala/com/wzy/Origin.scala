@@ -16,8 +16,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
 object Origin {
-  //val maskedPath = "input/Test3.tif"
-  //val resultPath = "output/"
+
   def main(args: Array[String]): Unit = {
 
     val inputfile: String = args(0)
@@ -25,8 +24,7 @@ object Origin {
 
     val sparkconf =
       new SparkConf()
-        //.setMaster("local[*]")
-        .setAppName("Spark Origin Repartition Application")
+        .setAppName("Spark Origin Application")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
         .setIfMissing("spark.kryoserializer.buffer.max", "256m")
@@ -50,8 +48,9 @@ object Origin {
     // HDFS配置
     val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
     val inputPath: String = hdfsBasePath + "/input/" + inputfile
-    val outputPath: String = hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
-    //val outputPath: String = "output/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    val outputPath: String = {
+      hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    }
 
     // 对Tiff格式进行解析
     val inputRdd: RDD[(ProjectedExtent, Tile)] = {
@@ -64,19 +63,16 @@ object Origin {
     val tiled: RDD[(SpatialKey, Tile)] = {
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
-        .repartition(multiple * coresum)
+        .repartition(coresum)
     }
 
-    println(tiled.getNumPartitions)
-
-    tiled.cache()
-
     //TODO 执行任务
-    tiled.mapValues { tile =>
+    tiled.repartition(tiled.getNumPartitions).mapValues { tile =>
       tile.focalMax(Square(3))
     }.saveAsObjectFile(outputPath)
 
-    print(1)
+
+    print("END")
 
     sc.stop()
   }

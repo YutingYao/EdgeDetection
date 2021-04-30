@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import com.wzy.allocation.AllocationCenter
 import com.wzy.monitor.{Worker, WorkerMonitor}
 
-import scala.collection.immutable
+import com.wzy.extend.RddImplicit._
 
 
 object Cacul {
@@ -24,12 +24,9 @@ object Cacul {
 
     val inputfile: String = args(0)
     val multiple: Int = args(1).toInt
-    val inputPath = inputfile
-    val resultPath = "output/"
 
     val sparkconf =
       new SparkConf()
-        .setMaster("local[*]")
         .setAppName("Spark Repartition Application")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
@@ -41,7 +38,7 @@ object Cacul {
 
     val sc = new SparkContext(sparkconf)
 
-    sc.setLogLevel("ERROR")
+    //sc.setLogLevel("ERROR")
 
     // 获取各个节点的计算能力信息
     println(sc.applicationId)
@@ -54,44 +51,39 @@ object Cacul {
 
 
     // HDFS配置
-    //val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
-    //val inputPath: String = hdfsBasePath + "/input/" + inputfile
-    //val outputPath: String = hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
-    val outputPath: String = "output/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
+    val inputPath: String = hdfsBasePath + "/input/" + inputfile
+    val outputPath: String = {
+      hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    }
 
     // 对Tiff格式进行解析
     val inputRdd: RDD[(ProjectedExtent, Tile)] = {
       sc.hadoopGeoTiffRDD(inputPath)
     }
 
+    //TODO nputRdd.acllocation()
+
     import geotrellis.spark.Implicits._
-    val (_, rasterMetaData) =
+    val (_, rasterMetaData) = {
       TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
+    }
 
     val tiled: RDD[(SpatialKey, Tile)] = {
-      inputRdd
-        .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
-        .repartition(multiple * coresum)
+      inputRdd.tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
+        .repartition(coresum)
     }
-    println(tiled.partitioner)
 
-    println(tiled.getNumPartitions)
-
-    //TODO 统计每个分区的大小
-    import com.wzy.extend.RddImplicit._
-    val partitionSize: Seq[(Int, Int)] = tiled.fetchPartitionSize
-    partitionSize.foreach(x => println("index: " + x._1 + "  size: " + x._2))
+    ////TODO 统计每个分区的大小
+    //import com.wzy.extend.RddImplicit._
+    //val partitionSize: Seq[(Int, Int)] = tileLayerRDD.fetchPartitionSize
+    //partitionSize.foreach(x => println("index: " + x._1 + "  size: " + x._2))
 
     //TODO 对数据进行分区
-    val partitionsIndex = Seq.range(0, tiled.getNumPartitions)
+    val partitionsIndex = Seq.range(0, multiple * tiled.getNumPartitions)
     val indexToPrefs: Map[Int, Seq[String]] = AllocationCenter.distrbutionByWeight(partitionsIndex, workers)
-
-    indexToPrefs.foreach(println)
-
     import com.wzy.extend.RddImplicit._
-    val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
-    println(myrdd.partitioner)
-    myrdd.cache()
+    val myrdd: RDD[(SpatialKey, Tile)] = tiled.repartition(multiple * tiled.getNumPartitions).acllocation(indexToPrefs)
 
     //TODO 执行任务
     myrdd.mapValues { tile =>
