@@ -2,6 +2,7 @@ package com.wzy.extend
 
 import geotrellis.raster.Tile
 import geotrellis.spark.SpatialKey
+import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
 
 import scala.collection.{Map, immutable}
@@ -23,7 +24,6 @@ class RddExtendFunctions[T: ClassTag](rdd: RDD[T]) {
       println("+++++++++++++++++++++")
       var sum = 0
       for (_ <- iterator) sum += 1
-      //println("index: " + index + "  size: " + sum)
       Iterator((index, sum))
     }).collect().toList
     partitionSize
@@ -35,6 +35,8 @@ object RddImplicit {
 
   // 隐式视图 把一种类型自动转为另一个类型
   implicit def addCustomFunctions(parent: RDD[(SpatialKey, Tile)]): RddExtendFunctions[(SpatialKey, Tile)] = new RddExtendFunctions(parent)
+
+  implicit def addCustomFunction(parent: RDD[(ProjectedExtent, Tile)]): RddExtendFunctions[(ProjectedExtent, Tile)] = new RddExtendFunctions(parent)
 
 }
 
