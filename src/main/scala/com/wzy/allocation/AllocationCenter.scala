@@ -1,19 +1,18 @@
 package com.wzy.allocation
 
-import com.wzy.monitor.Worker
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
+
+import com.wzy._
 
 /**
  * 分区策略反馈模块
  * 根据partition信息和节点计算能力信息，使用自适应数据分区策略，对Partition数据进行合理划分
- * 基于各个节点的权重。来进行资源调度
- * 权重可理解为每个节点的命中的比例，目前权重等同于每个节点的虚拟Cpu核数
+ * 基于各个节点的权重（每个节点的命中的比例）。来进行资源调度
  */
 object AllocationCenter {
-  private var random: Random = null //前n为权重的和
-  private var weightSum: Int = 0
+  private var random: Random = _ //前n为权重的和
+  private var weightSum: Int = _
   private var workers: Seq[Worker] = _
 
   /**
@@ -29,28 +28,25 @@ object AllocationCenter {
    * RabbitMQ 的 Topic 交换器使用 Trie 匹配
    * MySQL 中的 IN 语法涉及二分算法
    *
-   * @param partitionsIndex
+   * @param buckets
    * @param workers
    * @return
    */
-  def distrbutionByWeight(partitionsIndex: Seq[Int], workers: Seq[Worker]): Map[Int, Seq[String]] = {
-
+  def distrbutionByWeight(buckets: Seq[Bucket], workers: Seq[Worker]): Map[Int, Seq[String]] = {
     this.workers = workers
     val psum = new ListBuffer[Int]
     workers.foreach(x => {
       weightSum += x.totalCores
       psum += weightSum
     })
-
-
     var indexToPrefs: Map[Int, Seq[String]] = Map()
-
     random = new Random()
-
-    for (i <- partitionsIndex) {
+    for (i <- buckets) {
       val index = pickIndex(psum)
       val workerName = workers(index).hostPort.split(":")(0)
-      indexToPrefs += (i -> Seq(workerName))
+      if (workerName != "spark-master") {
+        indexToPrefs += (i.partitionIndex -> Seq(workerName))
+      }
     }
 
     indexToPrefs

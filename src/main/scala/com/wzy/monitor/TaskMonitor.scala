@@ -12,8 +12,7 @@ package com.wzy.monitor
 object TaskMonitor {
 
   /**
-   * 基于4040端口获取信息
-   * TODO 需要获取的信息有
+   * TODO 基于4040端口获取任务执行信息
    * 以节点为力度
    * 1. 获取之前执行的stage的所有信息
    *

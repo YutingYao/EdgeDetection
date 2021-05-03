@@ -1,16 +1,18 @@
-package com.wzy
+package com.wzy.useless
 
 import java.awt.image.BufferedImage
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.wzy.monitor.WorkerMonitor
-import com.wzy.sharpen.EdgeDetection.detection
+import com.wzy.useless.sharpen.EdgeDetection.detection
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
+
 /**
  * spark 主函数
+ * 该文件暂时被废弃
  */
 object EdgeDetection {
 
@@ -36,11 +38,11 @@ object EdgeDetection {
 
     val outputPath: String = hdfsBasePath + "/output/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
 
-    //TODO 读取图像数据，存储为DataFrame格式
+    // 读取图像数据，存储为DataFrame格式
     //解码后的图像通道顺序和像素数值类型是固定的，顺序固定为BGR(A)，像素数值类型为8U，最多支持4个通道
     val images: DataFrame = spark.read.format("image").option("dropInvalid", value = true).load(inputPath)
 
-    //TODO 对数据分区
+    // 对数据分区
     // 1. 获取各个节点的计算资源（CPU核心数量、内存大小数量）
     // 2. 对RDD使用Partition进行分区
     // 3. 调用 getPreferredLocations

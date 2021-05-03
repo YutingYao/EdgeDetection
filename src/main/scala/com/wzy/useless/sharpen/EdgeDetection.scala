@@ -1,4 +1,4 @@
-package com.wzy.sharpen
+package com.wzy.useless.sharpen
 
 import java.awt.Color
 import java.awt.image.{BufferedImage, WritableRaster}

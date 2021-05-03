@@ -18,12 +18,6 @@ class MyRDD[T: ClassTag](parent: RDD[T], locationPrefs: Map[Int, Seq[String]]) e
 
   override protected def getPartitions: Array[Partition] = parent.partitions
 
-  /**
-   * 获取优先分配的位置
-   *
-   * @param s
-   * @return
-   */
   override def getPreferredLocations(s: Partition): Seq[String] = {
     locationPrefs.getOrElse(s.index, Nil)
   }

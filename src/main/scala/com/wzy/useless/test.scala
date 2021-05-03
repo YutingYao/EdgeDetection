@@ -1,4 +1,4 @@
-package com.wzy
+package com.wzy.useless
 
 import org.apache.spark.{SparkConf, SparkContext}
 

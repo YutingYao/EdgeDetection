@@ -1,4 +1,4 @@
-package com.wzy.sharpen
+package com.wzy.useless.sharpen
 
 /**
  * 卷积运算

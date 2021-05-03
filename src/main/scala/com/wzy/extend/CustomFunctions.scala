@@ -5,8 +5,9 @@ import geotrellis.spark.SpatialKey
 import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
 
-import scala.collection.{Map, immutable}
+import scala.collection.Map
 import scala.reflect.ClassTag
+import com.wzy._
 
 /**
  * 为myRDD添加隐式函数
@@ -19,12 +20,11 @@ class RddExtendFunctions[T: ClassTag](rdd: RDD[T]) {
   def acllocation(locationPrefs: Map[Int, Seq[String]]) = new MyRDD[T](rdd, locationPrefs)
 
   // 获取每个分区的大小
-  def fetchPartitionSize: List[(Int, Int)] = {
-    val partitionSize: List[(Int, Int)] = rdd.mapPartitionsWithIndex((index, iterator) => {
-      println("+++++++++++++++++++++")
+  def fetchBuckets: Seq[Bucket] = {
+    val partitionSize: Seq[Bucket] = rdd.mapPartitionsWithIndex((index, iterator) => {
       var sum = 0
       for (_ <- iterator) sum += 1
-      Iterator((index, sum))
+      Iterator(Bucket(index, sum))
     }).collect().toList
     partitionSize
   }
