@@ -14,7 +14,8 @@ import geotrellis.spark.tiling.FloatingLayoutScheme
 import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-
+import com.wzy.extend.RddImplicit._
+import org.apache.spark.storage.StorageLevel
 
 object Cacul {
 
@@ -41,7 +42,6 @@ object Cacul {
 
     // 获取各个节点的计算能力信息
     println(sc.applicationId)
-    //val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, "localhost")
     val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
     var clusterTotalCores = 0
     workers.foreach(x => {
@@ -64,16 +64,21 @@ object Cacul {
     val inputRdd: RDD[(ProjectedExtent, Tile)] = {
       sc.hadoopGeoTiffRDD(inputPath)
     }
-    import geotrellis.spark.Implicits._
     val (_, rasterMetaData) =
       TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
+
+    val initnumPartitions = inputRdd.getNumPartitions
+
     val tiled: RDD[(SpatialKey, Tile)] = {
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
-        .repartition(multiple * clusterTotalCores)
+        .repartition(multiple * initnumPartitions)
     }
+
+    tiled.cache()
+    println(tiled.count())
+
     //TODO 统计每个分区的大小
-    import com.wzy.extend.RddImplicit._
     val buckets: Seq[Bucket] = tiled.fetchBuckets
 
     //TODO 分区匹配算法
@@ -81,14 +86,14 @@ object Cacul {
     // val indexToPrefs: Map[Int, Seq[String]] = AllocationCenter.distrbutionByWeight(buckets, workers) // 按权重进行随机分配
     indexToPrefs.foreach(println)
 
-    import com.wzy.extend.RddImplicit._
     val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
 
-    myrdd.mapValues { tile =>
+    // 任务1
+    val count = myrdd.mapValues { tile =>
       tile.focalMax(Square(3))
-    }.saveAsObjectFile(outputPath)
+    }.count()
 
-    print("END")
+    print(s"Cacul Application END $count")
     sc.stop()
   }
 }

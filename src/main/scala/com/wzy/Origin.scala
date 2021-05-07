@@ -3,6 +3,7 @@ package com.wzy
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import com.wzy.allocation.Allocation
 import com.wzy.monitor.WorkerMonitor
 import geotrellis.raster.Tile
 import geotrellis.raster.mapalgebra.focal.Square
@@ -12,6 +13,7 @@ import geotrellis.spark.tiling.FloatingLayoutScheme
 import geotrellis.spark.{SpatialKey, TileLayerMetadata, withTilerMethods}
 import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 
@@ -40,11 +42,13 @@ object Origin {
     // 获取各个节点的计算能力信息
     println(sc.applicationId)
     val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
-    //val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
     var clusterTotalCores = 0
     workers.foreach(x => {
       clusterTotalCores += x.totalCores
     })
+
+    //TODO 对节点进行评估
+    val effects = evaluation.EvaluationCenter.workersToEffects(workers)
 
     // HDFS 配置
     val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
@@ -64,17 +68,38 @@ object Origin {
     val (_, rasterMetaData) =
       TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
 
+    val initnumPartitions = inputRdd.getNumPartitions
     val tiled: RDD[(SpatialKey, Tile)] = {
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
-        .repartition(multiple * clusterTotalCores)
+        .repartition(initnumPartitions)
     }
 
+    val tiledrdd: tiled.type = tiled.persist(StorageLevel.MEMORY_AND_DISK)
+
+    //TODO 统计每个分区的大小
+    import com.wzy.extend.RddImplicit._
+    val buckets: Seq[Bucket] = tiledrdd.fetchBuckets
+
+    //TODO 分区匹配算法
+    val indexToPrefs: Map[Int, Seq[String]] = Allocation.allocate(buckets, effects) // Max_Min Fairness 算法
+    // val indexToPrefs: Map[Int, Seq[String]] = AllocationCenter.distrbutionByWeight(buckets, workers) // 按权重进行随机分配
+    indexToPrefs.foreach(println)
+
+    tiledrdd.mapValues { tile =>
+      tile.focalMax(Square(3))
+    }
+
+    // 任务1
     tiled.mapValues { tile =>
       tile.focalMax(Square(3))
-    }.saveAsObjectFile(outputPath)
+    }
 
-    print("END")
+    val count = tiled.mapValues { tile =>
+      tile.focalMax(Square(3))
+    }.count()
+
+    print(s"Origin Application END $count")
     sc.stop()
   }
 }
