@@ -81,13 +81,13 @@ object Allocation {
   def calculateFit(effect: Effect, bks: Seq[Bucket]): Int = {
     val rddSize: Int = bks.map(_.size).sum
     //val rddSize: Int = bks.foldRight(0)((_1, _2) => _2 + _2)
-    println(s"rddSize: $rddSize")
+    //println(s"rddSize: $rddSize")
     val capability: Int = effect.capability
-    println(s"capability: $capability")
+    //println(s"capability: $capability")
     // 判断是否过载
     val d = (rddSize.toDouble / TotalRddSize) - (capability.toDouble / TotalCapability)
     val int = (1 / math.pow(d, 2)).toInt
-    println(s"${effect.workerName}; d : $d; fit: $int;")
+    //println(s"${effect.workerName}; d : $d; fit: $int;")
     int
   }
 
@@ -114,7 +114,7 @@ object Allocation {
    * @return 最小的partition
    */
   def moveMinBucket(overEffect: Effect, underEffect: Effect): Bucket = {
-    println(s"overEffect: $overEffect; underEffect: $underEffect ")
+    //println(s"overEffect: $overEffect; underEffect: $underEffect ")
     val minBucket = allocation(overEffect).minBy(bucket => bucket.size)
     allocation.update(overEffect, allocation(overEffect).filter(_ != minBucket))
     allocation.update(underEffect, allocation(underEffect) :+ minBucket)

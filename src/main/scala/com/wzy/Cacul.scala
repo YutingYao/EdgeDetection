@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.wzy.allocation.Allocation
+import com.wzy.extend.RddImplicit._
 import com.wzy.monitor.WorkerMonitor
 import geotrellis.raster.Tile
 import geotrellis.raster.mapalgebra.focal.Square
@@ -14,8 +15,6 @@ import geotrellis.spark.tiling.FloatingLayoutScheme
 import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import com.wzy.extend.RddImplicit._
-import org.apache.spark.storage.StorageLevel
 
 object Cacul {
 
@@ -26,7 +25,7 @@ object Cacul {
 
     val sparkconf =
       new SparkConf()
-        //.setMaster("local[*]")
+        .setMaster("local[*]")
         .setAppName("Spark Repartition Application")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
@@ -42,7 +41,8 @@ object Cacul {
 
     // 获取各个节点的计算能力信息
     println(sc.applicationId)
-    val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
+    //val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
+    val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, "localhost")
     var clusterTotalCores = 0
     workers.foreach(x => {
       clusterTotalCores += x.totalCores
@@ -52,13 +52,13 @@ object Cacul {
     val effects = evaluation.EvaluationCenter.workersToEffects(workers)
 
     // HDFS 配置
-    val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
-    val inputPath: String = hdfsBasePath + "/input/" + inputfile
-    val outputPath: String = hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    //val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
+    //val inputPath: String = hdfsBasePath + "/input/" + inputfile
+    //val outputPath: String = hdfsBasePath + "/output/wzy/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
 
     // LOCAL 配置
-    //val inputPath = inputfile
-    //val outputPath: String = "output/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
+    val inputPath = inputfile
+    val outputPath: String = "output/" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
 
     // 对Tiff格式进行解析
     val inputRdd: RDD[(ProjectedExtent, Tile)] = {
@@ -75,16 +75,20 @@ object Cacul {
         .repartition(multiple * initnumPartitions)
     }
 
+    //TODO 通过持久化的rdd来拿数据
     tiled.cache()
     println(tiled.count())
+    println(tiled.getNumPartitions)
+    println(WorkerMonitor.getRdd(sc.applicationId, "localhost", tiled.id))
 
     //TODO 统计每个分区的大小
     val buckets: Seq[Bucket] = tiled.fetchBuckets
 
     //TODO 分区匹配算法
     val indexToPrefs: Map[Int, Seq[String]] = Allocation.allocate(buckets, effects) // Max_Min Fairness 算法
+
     // val indexToPrefs: Map[Int, Seq[String]] = AllocationCenter.distrbutionByWeight(buckets, workers) // 按权重进行随机分配
-    indexToPrefs.foreach(println)
+    //indexToPrefs.foreach(println)
 
     val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
 
