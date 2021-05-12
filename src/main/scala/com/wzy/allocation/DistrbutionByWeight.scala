@@ -1,16 +1,16 @@
 package com.wzy.allocation
 
+import com.wzy._
+
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
-
-import com.wzy._
 
 /**
  * 分区策略反馈模块
  * 根据partition信息和节点计算能力信息，使用自适应数据分区策略，对Partition数据进行合理划分
  * 基于各个节点的权重（每个节点的命中的比例）。来进行资源调度
  */
-object AllocationCenter {
+object DistrbutionByWeight {
   private var random: Random = _ //前n为权重的和
   private var weightSum: Int = _
   private var workers: Seq[Worker] = _
@@ -48,9 +48,7 @@ object AllocationCenter {
         indexToPrefs += (i.partitionIndex -> Seq(workerName))
       }
     }
-
     indexToPrefs
-
   }
 
   def pickIndex(psum: Seq[Int]): Int = {
@@ -64,4 +62,5 @@ object AllocationCenter {
     }
     lo
   }
+
 }

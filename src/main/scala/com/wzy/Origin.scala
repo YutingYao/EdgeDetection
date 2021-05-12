@@ -3,7 +3,8 @@ package com.wzy
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import com.wzy.allocation.Allocation
+import com.wzy.allocation.DistrbutionByMaxminFairness
+import com.wzy.allocation.DistrbutionByWeight
 import com.wzy.monitor.WorkerMonitor
 import geotrellis.raster.Tile
 import geotrellis.raster.mapalgebra.focal.Square
@@ -82,7 +83,7 @@ object Origin {
     val buckets: Seq[Bucket] = tiledrdd.fetchBuckets
 
     //TODO 分区匹配算法
-    val indexToPrefs: Map[Int, Seq[String]] = Allocation.allocate(buckets, effects) // Max_Min Fairness 算法
+    val indexToPrefs: Map[Int, Seq[String]] = DistrbutionByMaxminFairness.allocate(buckets, effects) // Max_Min Fairness 算法
     // val indexToPrefs: Map[Int, Seq[String]] = AllocationCenter.distrbutionByWeight(buckets, workers) // 按权重进行随机分配
     indexToPrefs.foreach(println)
 
@@ -101,5 +102,6 @@ object Origin {
 
     print(s"Origin Application END $count")
     sc.stop()
+
   }
 }

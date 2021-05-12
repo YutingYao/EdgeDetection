@@ -1,35 +1,12 @@
-package com
-
-import scala.collection.mutable
-
-/**
- * 包共有对象
- */
-package object wzy {
-
-  case class Bucket(var partitionIndex: Int, var size: Int)
-
-  case class Effect(var workerName: String, var capability: Int)
-
-  case class Worker(var id: String, var hostPort: String, var totalCores: Int, var maxMemory: Double)
-
-  implicit def allocationToPrefs(allocation: mutable.Map[Effect, Seq[Bucket]]): Map[Int, Seq[String]] = {
-    var indexToPrefs: Map[Int, Seq[String]] = Map()
-    for ((effect, buckets) <- allocation) {
-      for(i <- buckets){
-        indexToPrefs += (i.partitionIndex -> Seq(effect.workerName))
-      }
-    }
-    indexToPrefs
-  }
-
-}
+package com.wzy.akka.common
 
 //使用样例类来构建协议
 
 //Worker注册信息
 case class RegisterWorkerInfo(id: String, CpuCores: Int, ram: Long)
 
+//  这个是WorkerInfo，是保存在Master的HashMap中的，该HashMap用于管理Worker
+// 将来这个WorkerInfo会扩展，比如增加Worker上一次的心跳时间
 @SerialVersionUID(123L)
 class WorkerInfo(val id: String, val cpu: Int, val ram: Long) extends Serializable {
   // 新增属性：心跳时间
@@ -56,3 +33,8 @@ case object StartTimeOutWorker
 
 // Master给自己发消息，检测Worker，对于心跳超时的
 case object RemoveTimeOutWorker
+
+// Evaluationzhu
+case object RegisterEvaluation
+// Evaluation获取worker信息
+case object GetMasterActorWorkers

@@ -1,18 +1,16 @@
 package com.wzy.allocation
 
+import com.wzy._
+
 import scala.collection.mutable
 import scala.util.control._
-import com.wzy._
-import com.wzy.allocation.AllocationCenter.{pickIndex, random}
-
-import scala.util.Random
 
 /**
  * 分区策略反馈模块
  * 根据partition信息和节点计算能力信息，使用自适应数据分区策略，对Partition数据进行合理划分
- * Max_Min Fairness 算法
+ * 使用Max_Min Fairness 算法
  */
-object Allocation {
+object DistrbutionByMaxminFairness {
 
   private var bks: Seq[Bucket] = _
   private var effs: Seq[Effect] = _
@@ -23,6 +21,7 @@ object Allocation {
 
   /**
    * Max_Min Fairness
+   * 最大最小分配算法
    *
    * @param buckets
    * @param effects

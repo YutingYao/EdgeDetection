@@ -31,7 +31,7 @@ object WorkerMonitor {
       println("totalCores:" + x.totalCores)
       println("maxMemory: " + x.maxMemory)
     })
-    workers.drop(1)
+    workers
   }
 
   // 获取 rdd 的大小和情况
