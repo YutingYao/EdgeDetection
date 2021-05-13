@@ -18,45 +18,51 @@ import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable
+
 object Cacul {
 
   def main(args: Array[String]): Unit = {
     EvaluationCenter.main("10.5.0.2 9002 EvalauationAcotr 10.5.0.2 9000 spark-master".split(" "))
 
+    val inputfile: String = args(0)
+    val multiple: Int = args(1).toInt
+
+    val sparkconf =
+      new SparkConf()
+        //.setMaster("local[*]")
+        .setAppName("Spark Repartition Application")
+        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+        .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
+        .setIfMissing("spark.kryoserializer.buffer.max", "256m")
+        .setIfMissing("spark.kryoserializer.buffer", "64m")
+        .setIfMissing("spark.driver.maxResultSize", "4g")
+        .set("hdfsBasePath", "hdfs://namenode:8020")
+        .set("spark-master", "10.101.241.5")
+
+    val sc = new SparkContext(sparkconf)
+
+    sc.setLogLevel("ERROR")
     try {
-      val inputfile: String = args(0)
-      val multiple: Int = args(1).toInt
-
-      val sparkconf =
-        new SparkConf()
-          //.setMaster("local[*]")
-          .setAppName("Spark Repartition Application")
-          .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-          .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
-          .setIfMissing("spark.kryoserializer.buffer.max", "256m")
-          .setIfMissing("spark.kryoserializer.buffer", "64m")
-          .setIfMissing("spark.driver.maxResultSize", "4g")
-          .set("hdfsBasePath", "hdfs://namenode:8020")
-          .set("spark-master", "10.101.241.5")
-
-      val sc = new SparkContext(sparkconf)
-
-      sc.setLogLevel("ERROR")
-
       // 获取各个节点的计算能力信息
       println(sc.applicationId)
       val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, sparkconf.get("spark-master"))
-      //val workers: Seq[Worker] = WorkerMonitor.getAllworkers(sc.applicationId, "localhost")
-      workers.foreach(x => println(s"${x.id} + ${x.totalCores}"))
       var clusterTotalCores = 0
+      workers.foreach(x => {
+        clusterTotalCores += x.totalCores
+      })
       println(EvaluationCenter.workers.size)
       EvaluationCenter.workers.foreach(x => {
         clusterTotalCores += x._2.cpu
-        println(s"${x._1} + ${x._2.id} + ${x._2.cpu} + ${x._2.lastCpuUsage} + ${x._2.ram} +  ${x._2.lastMemUsage}")
+        println(s"EvaluationCenter ${x._1} + ${x._2.id} + ${x._2.cpu} + ${x._2.lastCpuUsage} + ${x._2.ram} +  ${x._2.lastMemUsage}")
       })
 
       //TODO 对节点进行评估
-      val effects = evaluation.EvaluationCenter.workersToEffects(workers)
+      //val effects = EvaluationCenter.workersToEffects(workers)
+      val effects: Seq[Effect] = EvaluationCenter.getEffect
+
+      println("节点评估情况")
+      effects.foreach(println)
 
       // HDFS 配置
       val hdfsBasePath: String = sparkconf.get("hdfsBasePath")
@@ -107,8 +113,8 @@ object Cacul {
         clusterTotalCores += x._2.cpu
         println(s"${x._1} + ${x._2.id} + ${x._2.cpu} + ${x._2.lastCpuUsage} + ${x._2.ram} +  ${x._2.lastMemUsage}")
       })
-      sc.stop()
     } finally {
+      sc.stop()
       EvaluationCenter.stop()
     }
   }
