@@ -10,7 +10,7 @@ import scala.util.control._
  * 根据partition信息和节点计算能力信息，使用自适应数据分区策略，对Partition数据进行合理划分
  * 使用Max_Min Fairness 算法
  */
-object DistrbutionByMaxminFairness {
+object DistributionByMaxminFairness {
 
   private var bks: Seq[Bucket] = _
   private var effs: Seq[Effect] = _
@@ -27,11 +27,11 @@ object DistrbutionByMaxminFairness {
    * @param effects
    */
 
-  def allocate(buckets: Seq[Bucket], effects: Seq[Effect]): mutable.Map[Effect, Seq[Bucket]] = {
+  def distributionByMaxminFairness(buckets: Seq[Bucket], effects: Seq[Effect]): mutable.Map[Effect, Seq[Bucket]] = {
     bks = buckets.sortBy(_.size)
     effs = effects.filter(_.workerName != "spark-master").sortBy(_.capability)
-    bks.foreach(println)
-    effs.foreach(println)
+    //bks.foreach(println)
+    //effs.foreach(println)
     TotalRddSize = bks.map(_.size).sum
     TotalCapability = effs.map(_.capability).sum
     // 初始化
@@ -55,8 +55,8 @@ object DistrbutionByMaxminFairness {
       val movedBucket: Bucket = moveMinBucket(overEffect, underEffect)
       // 重新计算fit情况
       val newFitSum = calculateFitSum(allocation)
-      allocation.foreach(println)
-      fit.foreach(println)
+      //allocation.foreach(println)
+      //fit.foreach(println)
       if (newFitSum <= fitSum) {
         println(s"fitSum: $fitSum; newFitSum: $newFitSum 整体分配适应度没有增加，结束调整")
         moveBackMinBucket(overEffect, underEffect, movedBucket)

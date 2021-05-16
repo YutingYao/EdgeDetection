@@ -3,8 +3,8 @@ package com.wzy
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import com.wzy.allocation.DistrbutionByMaxminFairness
-import com.wzy.allocation.DistrbutionByWeight
+import com.wzy.allocation.DistributionByMaxminFairness
+import com.wzy.allocation.DistributionByWeight
 import com.wzy.evaluation.EvaluationCenter
 import com.wzy.extend.RddImplicit._
 import com.wzy.monitor.WorkerMonitor
@@ -20,18 +20,19 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
 
-object Cacul {
+object Experimental {
 
   def main(args: Array[String]): Unit = {
     EvaluationCenter.main("10.5.0.2 9002 EvalauationAcotr 10.5.0.2 9000 spark-master".split(" "))
 
-    val inputfile: String = args(0)
-    val multiple: Int = args(1).toInt
+    val distribution: String = args(0)
+    val inputfile: String = args(1)
+    val multiple: Int = args(2).toInt
 
     val sparkconf =
       new SparkConf()
         //.setMaster("local[*]")
-        .setAppName("Spark Repartition Application")
+        .setAppName(s"Experimental Application by $distribution")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
         .setIfMissing("spark.kryoserializer.buffer.max", "256m")
@@ -42,7 +43,7 @@ object Cacul {
 
     val sc = new SparkContext(sparkconf)
 
-    sc.setLogLevel("ERROR")
+    //sc.setLogLevel("ERROR")
     try {
       // 获取各个节点的计算能力信息
       println(sc.applicationId)
@@ -77,6 +78,7 @@ object Cacul {
       val inputRdd: RDD[(ProjectedExtent, Tile)] = {
         sc.hadoopGeoTiffRDD(inputPath)
       }
+
       val (_, rasterMetaData) =
         TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
 
@@ -91,28 +93,38 @@ object Cacul {
       // 获取节点性能权重
 
 
-      //TODO 统计每个分区的大小
+      // 统计每个分区的大小
       val buckets: Seq[Bucket] = tiled.fetchBuckets
 
+      // 三种策略进行对比
+      distribution match {
+        case "weight" => {
+          val indexToPrefs = DistributionByMaxminFairness.distributionByMaxminFairness(buckets, effects)
+          val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
+          val count = myrdd.mapValues { tile =>
+            tile.focalMax(Square(3))
+          }.count()
+          println(s"$distribution  + 计算结果为$count")
+        }
+        case "maxmin" => {
+          val indexToPrefs = DistributionByWeight.distrbutionByWeight(buckets, workers)
+          val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
+          val count = myrdd.mapValues { tile =>
+            tile.focalMax(Square(3))
+          }.count()
+          println(s"$distribution  + 计算结果为$count")
 
-      //TODO 分区匹配算法
-      val indexToPrefs: Map[Int, Seq[String]] = DistrbutionByMaxminFairness.allocate(buckets, effects) // Max_Min Fairness 算法
+        }
+        case "origin" => {
+          val count = tiled.mapValues { tile =>
+            tile.focalMax(Square(3))
+          }.count()
+          println(s"$distribution  + 计算结果为$count")
 
-      //val indexToPrefs: Map[Int, Seq[String]] = DistrbutionByMaxminFairness.distrbutionByWeight(buckets, workers) // 按权重进行随机分配
-      //indexToPrefs.foreach(println)
+        }
+      }
 
-      val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
-
-      // 任务1
-      val count = myrdd.mapValues { tile =>
-        tile.focalMax(Square(3))
-      }.count()
-
-      print(s"Cacul Application END $count")
-      EvaluationCenter.workers.foreach(x => {
-        clusterTotalCores += x._2.cpu
-        println(s"${x._1} + ${x._2.id} + ${x._2.cpu} + ${x._2.lastCpuUsage} + ${x._2.ram} +  ${x._2.lastMemUsage}")
-      })
+      print(s"Experimental Application by $distribution")
     } finally {
       sc.stop()
       EvaluationCenter.stop()
