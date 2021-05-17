@@ -32,7 +32,7 @@ object Experimental {
     val sparkconf =
       new SparkConf()
         //.setMaster("local[*]")
-        .setAppName(s"Experimental Application by $distribution")
+        .setAppName(s"Experimental Application by $distribution by Expansion $multiple")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
         .setIfMissing("spark.kryoserializer.buffer.max", "256m")
@@ -83,12 +83,11 @@ object Experimental {
         TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
 
       val initnumPartitions = inputRdd.getNumPartitions
+      println(initnumPartitions)
 
-      val tiled: RDD[(SpatialKey, Tile)] = {
-        inputRdd
-          .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
-          .repartition(multiple * initnumPartitions)
-      }
+      val tiled: RDD[(SpatialKey, Tile)] = inputRdd
+        .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
+        .repartition(multiple * initnumPartitions)
 
       // 获取节点性能权重
 
@@ -98,8 +97,14 @@ object Experimental {
 
       // 三种策略进行对比
       distribution match {
+        case "origin" => {
+          val count = tiled.mapValues { tile =>
+            tile.focalMax(Square(3))
+          }.count()
+          println(s"$distribution  + 计算结果为$count")
+        }
         case "weight" => {
-          val indexToPrefs = DistributionByMaxminFairness.distributionByMaxminFairness(buckets, effects)
+          val indexToPrefs = DistributionByWeight.distrbutionByWeight(buckets, workers)
           val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
           val count = myrdd.mapValues { tile =>
             tile.focalMax(Square(3))
@@ -107,20 +112,16 @@ object Experimental {
           println(s"$distribution  + 计算结果为$count")
         }
         case "maxmin" => {
-          val indexToPrefs = DistributionByWeight.distrbutionByWeight(buckets, workers)
+          val indexToPrefs = DistributionByMaxminFairness.distributionByMaxminFairness(buckets, effects)
           val myrdd: RDD[(SpatialKey, Tile)] = tiled.acllocation(indexToPrefs)
           val count = myrdd.mapValues { tile =>
             tile.focalMax(Square(3))
           }.count()
           println(s"$distribution  + 计算结果为$count")
-
         }
-        case "origin" => {
-          val count = tiled.mapValues { tile =>
-            tile.focalMax(Square(3))
-          }.count()
-          println(s"$distribution  + 计算结果为$count")
-
+        case _ =>{
+          println(s"Experimental Application by $distribution by Expansion $multiple")
+          println(s"$distribution don't match any case error")
         }
       }
 

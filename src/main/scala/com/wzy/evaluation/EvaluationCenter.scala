@@ -76,7 +76,6 @@ object EvaluationCenter {
     println("memUsageAvg" + memUsageAvg)
 
     for (key <- workers.keys) {
-      println(key)
       workerToWeight += (key -> workers(key).cpu)
     }
 
